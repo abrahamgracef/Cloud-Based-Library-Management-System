@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: library-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: librarydb
+      POSTGRES_USER: libraryuser
+      POSTGRES_PASSWORD: librarypassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U libraryuser -d librarydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: library-app
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/librarydb
+      SPRING_DATASOURCE_USERNAME: libraryuser
+      SPRING_DATASOURCE_PASSWORD: librarypassword
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - library-network
+
+networks:
+  library-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

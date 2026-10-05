@@ -1,0 +1,281 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  AWS CloudFormation Template for Cloud-Based Library Management System.
+  Deploys VPC, Subnets, Security Groups, EC2 (t3.micro), RDS PostgreSQL (db.t3.micro),
+  S3 Bucket, SNS Topic, CloudWatch Log Group, and IAM Roles for CodeDeploy.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: Production
+    Description: Environment name used for tagging resources.
+
+  VpcCIDR:
+    Type: String
+    Default: 10.0.0.0/16
+    Description: IP range (CIDR notation) for the VPC.
+
+  PublicSubnetCIDR:
+    Type: String
+    Default: 10.0.1.0/24
+    Description: IP range for public subnet.
+
+  PrivateSubnet1CIDR:
+    Type: String
+    Default: 10.0.2.0/24
+    Description: IP range for private subnet 1 (RDS).
+
+  PrivateSubnet2CIDR:
+    Type: String
+    Default: 10.0.3.0/24
+    Description: IP range for private subnet 2 (RDS).
+
+  DBUsername:
+    Type: String
+    Default: libraryuser
+    Description: Master username for RDS PostgreSQL.
+
+  DBPassword:
+    Type: String
+    NoEcho: true
+    Default: LibraryPassword123!
+    Description: Master password for RDS PostgreSQL.
+
+Resources:
+  # VPC Infrastructure
+  LibraryVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-LibraryVPC'
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-IGW'
+
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref LibraryVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LibraryVPC
+      CidrBlock: !Ref PublicSubnetCIDR
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-PublicSubnet'
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LibraryVPC
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-PrivateSubnet1'
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref LibraryVPC
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-PrivateSubnet2'
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref LibraryVPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-PublicRouteTable'
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # Security Groups
+  EC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable HTTP on 8080 and SSH on 22
+      VpcId: !Ref LibraryVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-EC2-SG'
+
+  RDSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for PostgreSQL RDS allowing traffic from EC2
+      VpcId: !Ref LibraryVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref EC2SecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-RDS-SG'
+
+  # RDS Subnet Group & Instance
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnets for Library PostgreSQL Instance
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-DBSubnetGroup'
+
+  PostgreSQLDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: postgres
+      EngineVersion: '15.4'
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      DBName: librarydb
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSecurityGroup
+      PubliclyAccessible: false
+      MultiAZ: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-PostgreSQL'
+
+  # S3 Bucket for Book Covers
+  BookCoversS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'library-management-book-covers-${AWS::AccountId}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-BookCoversS3Bucket'
+
+  # SNS Topic for Notifications
+  LibraryNotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: library-management-notifications
+      DisplayName: Library Management System Alerts & Notifications
+
+  # CloudWatch Log Group
+  ApplicationLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/library-management-system/application
+      RetentionInDays: 30
+
+  # IAM Roles and Instance Profile
+  EC2CodeDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
+        - arn:aws:iam::aws:policy/AWSCodeDeployFullAccess
+        - arn:aws:iam::aws:policy/AmazonSNSFullAccess
+
+  EC2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref EC2CodeDeployRole
+
+  # EC2 Instance
+  AppEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t3.micro
+      ImageId: ami-0c101f26f147fa7fd # Amazon Linux 2023 AMI (us-east-1)
+      SubnetId: !Ref PublicSubnet
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      IamInstanceProfile: !Ref EC2InstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y ruby wget java-21-amazon-corretto-devel
+          cd /home/ec2-user
+          wget https://aws-codedeploy-${AWS::Region}.s3.${AWS::Region}.amazonaws.com/latest/install
+          chmod +x ./install
+          ./install auto
+          systemctl enable codedeploy-agent
+          systemctl start codedeploy-agent
+      Tags:
+        - Key: Name
+          Value: !Sub '${EnvironmentName}-AppServer'
+
+Outputs:
+  EC2PublicIP:
+    Description: Public IP of the Application EC2 Instance
+    Value: !GetAtt AppEC2Instance.PublicIp
+
+  RDSEndpoint:
+    Description: RDS PostgreSQL Connection Endpoint
+    Value: !GetAtt PostgreSQLDBInstance.Endpoint.Address
+
+  S3BucketName:
+    Description: S3 Bucket Name for Book Covers
+    Value: !Ref BookCoversS3Bucket
+
+  SNSTopicArn:
+    Description: SNS Topic ARN for Notifications
+    Value: !Ref LibraryNotificationTopic

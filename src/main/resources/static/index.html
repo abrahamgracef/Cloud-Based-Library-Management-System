@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS DevOps Cloud-Based Library Management System</title>
+  
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top App Header -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="brand-section">
+        <div class="brand-icon">
+          <i class="fas fa-book-reader"></i>
+        </div>
+        <div class="brand-info">
+          <h1>
+            AWS DevOps Cloud Library Management System
+            <span class="aws-pill" style="margin-left: 0.5rem; font-size: 0.75rem;"><i class="fab fa-aws"></i> AWS Cloud Native</span>
+          </h1>
+          <p>
+            <span>Project Submission:</span>
+            <span class="author-badge">Abraham Grace F &bull; 24MIS0211 &bull; ISWE406L</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- AWS Infrastructure Status Badges -->
+      <div class="aws-pills">
+        <span class="aws-pill"><i class="fab fa-github"></i> CI/CD Pipeline</span>
+        <span class="aws-pill"><i class="fas fa-server"></i> EC2 Container</span>
+        <span class="aws-pill"><i class="fas fa-database"></i> RDS PostgreSQL</span>
+        <span class="aws-pill"><i class="fas fa-cloud-upload-alt"></i> S3 Assets</span>
+        <span class="aws-pill"><i class="fas fa-bell"></i> SNS Alerting</span>
+      </div>
+    </div>
+
+    <!-- Role Switcher & Student Selector -->
+    <div class="role-switcher-container">
+      <div class="role-switcher">
+        <button class="role-btn active" id="btn-role-librarian" onclick="switchRole('librarian')">
+          <i class="fas fa-user-shield"></i> Librarian / Admin View
+        </button>
+        <button class="role-btn" id="btn-role-student" onclick="switchRole('student')">
+          <i class="fas fa-user-graduate"></i> Student / Member View
+        </button>
+      </div>
+
+      <!-- Dynamic Student Selector Bar (Visible in Student View) -->
+      <div class="student-selector-bar" id="student-selector-bar" style="display: none;">
+        <label for="student-select-dropdown"><i class="fas fa-user-tag"></i> Active Student:</label>
+        <select id="student-select-dropdown" class="student-select-input">
+          <!-- Populated dynamically -->
+        </select>
+        <div id="student-info-display"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container">
+
+    <!-- ================================================================= -->
+    <!-- LIBRARIAN / ADMIN DASHBOARD VIEW                                 -->
+    <!-- ================================================================= -->
+    <div id="librarian-view">
+
+      <!-- 6 Statistics Cards -->
+      <div class="stats-grid">
+        <!-- 1. Total Books -->
+        <div class="stat-card">
+          <div class="stat-icon blue">
+            <i class="fas fa-book"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Total Books</h3>
+            <div class="stat-value" id="stat-total-books">0</div>
+            <div class="stat-subtext">Catalog collection</div>
+          </div>
+        </div>
+
+        <!-- 2. Available Books -->
+        <div class="stat-card">
+          <div class="stat-icon green">
+            <i class="fas fa-book-open"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Available Books</h3>
+            <div class="stat-value" id="stat-available-books">0</div>
+            <div class="stat-subtext">Ready for checkout</div>
+          </div>
+        </div>
+
+        <!-- 3. Issued Books -->
+        <div class="stat-card">
+          <div class="stat-icon amber">
+            <i class="fas fa-hand-holding-book"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Issued Books</h3>
+            <div class="stat-value" id="stat-issued-books">0</div>
+            <div class="stat-subtext">Currently borrowed</div>
+          </div>
+        </div>
+
+        <!-- 4. Overdue Books -->
+        <div class="stat-card">
+          <div class="stat-icon red">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Overdue Books</h3>
+            <div class="stat-value" id="stat-overdue-books">0</div>
+            <div class="stat-subtext">Requires return action</div>
+          </div>
+        </div>
+
+        <!-- 5. Active Members -->
+        <div class="stat-card">
+          <div class="stat-icon purple">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Active Members</h3>
+            <div class="stat-value" id="stat-active-members">0</div>
+            <div class="stat-subtext">Registered patrons</div>
+          </div>
+        </div>
+
+        <!-- 6. Total Fines Collected / Pending -->
+        <div class="stat-card">
+          <div class="stat-icon teal">
+            <i class="fas fa-coins"></i>
+          </div>
+          <div class="stat-content">
+            <h3>Fines (Paid / Pend)</h3>
+            <div class="stat-value" id="stat-fines" style="font-size: 1.15rem;">$0.00 / $0.00</div>
+            <div class="stat-subtext">Collected vs Outstanding</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Librarian Section Navigation Tabs -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="books" onclick="switchLibrarianTab('books')">
+          <i class="fas fa-books"></i> Book Management
+        </button>
+        <button class="tab-btn" data-tab="members" onclick="switchLibrarianTab('members')">
+          <i class="fas fa-users-cog"></i> Member Management
+        </button>
+        <button class="tab-btn" data-tab="issue-return" onclick="switchLibrarianTab('issue-return')">
+          <i class="fas fa-exchange-alt"></i> Issue & Return Book
+        </button>
+        <button class="tab-btn" data-tab="fines" onclick="switchLibrarianTab('fines')">
+          <i class="fas fa-receipt"></i> Overdue & Fine Management
+        </button>
+        <button class="tab-btn" data-tab="devops" onclick="switchLibrarianTab('devops')">
+          <i class="fab fa-aws"></i> DevOps & AWS Infrastructure
+        </button>
+      </div>
+
+      <!-- Tab A: Book Management -->
+      <div class="tab-content active" id="tab-books">
+        <div class="section-toolbar">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="book-search-input" class="search-input" placeholder="Search books by title, author, category, or ISBN...">
+          </div>
+          <button class="btn btn-primary" onclick="openAddBookModal()">
+            <i class="fas fa-plus"></i> Add New Book
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 70px;">Cover</th>
+                <th>Title & Author</th>
+                <th>ISBN</th>
+                <th>Category</th>
+                <th>Stock (Available / Total)</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="books-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab B: Member Management -->
+      <div class="tab-content" id="tab-members">
+        <div class="section-toolbar">
+          <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="member-search-input" class="search-input" placeholder="Search members by name, code, email, or role...">
+          </div>
+          <button class="btn btn-primary" onclick="openAddMemberModal()">
+            <i class="fas fa-user-plus"></i> Register Member
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Member Code</th>
+                <th>Full Name</th>
+                <th>Email Address</th>
+                <th>Phone Number</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="members-table-body">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab C: Issue & Return Book -->
+      <div class="tab-content" id="tab-issue-return">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+          
+          <!-- Issue Book Form Card -->
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-plus-circle text-primary"></i> Issue Book Form</h3>
+            </div>
+            <form id="form-issue-book">
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="issue-member-select">Select Member Patron</label>
+                <select id="issue-member-select" class="form-control" required>
+                  <option value="">-- Select Member --</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1rem;">
+                <label for="issue-book-select">Select Available Book</label>
+                <select id="issue-book-select" class="form-control" required>
+                  <option value="">-- Select Book --</option>
+                </select>
+              </div>
+
+              <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label for="issue-days">Borrow Duration (Days)</label>
+                <input type="number" id="issue-days" class="form-control" value="14" min="1" max="90" required>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fas fa-paper-plane"></i> Issue Book Now
+              </button>
+            </form>
+          </div>
+
+          <!-- Quick Return Book & Active Issues Table -->
+          <div class="card" style="grid-column: span 2;">
+            <div class="card-header">
+              <h3 class="card-title"><i class="fas fa-history text-accent"></i> Active Issued Books</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Member</th>
+                    <th>Book Title</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="borrows-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Tab D: Overdue & Fine Management -->
+      <div class="tab-content" id="tab-fines">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Overdue Items Requiring Return</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Book Title</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Current Fine</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="overdue-table-body">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-file-invoice-dollar"></i> Fine Records & Processing</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Fine ID</th>
+                  <th>Member</th>
+                  <th>Book Title</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Reason / Details</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="fines-table-body">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab E: DevOps & AWS Infrastructure Status -->
+      <div class="tab-content" id="tab-devops">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fab fa-aws" style="color: #ff9900;"></i> Cloud Architecture & CI/CD Pipeline Visualizer</h3>
+            <span class="badge badge-available"><i class="fas fa-circle" style="font-size: 0.5rem;"></i> Pipeline Healthy</span>
+          </div>
+
+          <div class="devops-container">
+            <div class="pipeline-flow">
+              
+              <!-- 1. GitHub -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box"><i class="fab fa-github"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">1. Source Control</div>
+                <div class="node-desc">GitHub Repo webhook triggers pipeline on main push.</div>
+                <div class="node-meta">Branch: <code>main</code> &bull; Commit: <code>HEAD</code></div>
+              </div>
+
+              <!-- 2. AWS CodePipeline -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #ff9900;"><i class="fas fa-project-diagram"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">2. CodePipeline</div>
+                <div class="node-desc">Automated CI/CD orchestrator managing execution steps.</div>
+                <div class="node-meta">State: <code>SUCCEEDED</code></div>
+              </div>
+
+              <!-- 3. AWS CodeBuild -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #3b82f6;"><i class="fas fa-hammer"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">3. CodeBuild</div>
+                <div class="node-desc">Builds Java 17 Spring Boot JAR with Maven & JUnit tests.</div>
+                <div class="node-meta">Artifact: <code>app.jar</code> &bull; 0 Failures</div>
+              </div>
+
+              <!-- 4. AWS CodeDeploy -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #10b981;"><i class="fas fa-rocket"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">4. CodeDeploy</div>
+                <div class="node-desc">Deploys target build artifacts smoothly to EC2 instances.</div>
+                <div class="node-meta">Strategy: <code>In-Place</code></div>
+              </div>
+
+              <!-- 5. AWS EC2 -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #8b5cf6;"><i class="fas fa-server"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">5. EC2 Server</div>
+                <div class="node-desc">Spring Boot application server running on Port 8080.</div>
+                <div class="node-meta">Instance: <code>t3.micro</code> &bull; Linux</div>
+              </div>
+
+              <!-- 6. AWS RDS PostgreSQL -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #06b6d4;"><i class="fas fa-database"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">6. RDS PostgreSQL</div>
+                <div class="node-desc">Managed relational database with Multi-AZ replication.</div>
+                <div class="node-meta">Engine: <code>PostgreSQL 15</code></div>
+              </div>
+
+              <!-- 7. AWS S3 Storage -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #ec4899;"><i class="fas fa-cloud-upload-alt"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">7. AWS S3 Bucket</div>
+                <div class="node-desc">Cloud storage for book cover images and digital attachments.</div>
+                <div class="node-meta">Bucket: <code>lib-media-s3</code></div>
+              </div>
+
+              <!-- 8. AWS CloudWatch -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #f59e0b;"><i class="fas fa-chart-line"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">8. CloudWatch</div>
+                <div class="node-desc">Real-time metrics, system performance logs & alarms.</div>
+                <div class="node-meta">Status: <code>Monitoring Active</code></div>
+              </div>
+
+              <!-- 9. AWS SNS -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #ef4444;"><i class="fas fa-paper-plane"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">9. AWS SNS</div>
+                <div class="node-desc">Notification service for email/SMS overdue alerts.</div>
+                <div class="node-meta">Topic: <code>lib-overdue-alerts</code></div>
+              </div>
+
+            </div>
+
+            <!-- Infrastructure Performance Panel -->
+            <div class="infra-metrics-grid">
+              <div class="infra-metric-item">
+                <h4>System Uptime</h4>
+                <p>99.98%</p>
+              </div>
+              <div class="infra-metric-item">
+                <h4>API Response Time</h4>
+                <p>24 ms</p>
+              </div>
+              <div class="infra-metric-item">
+                <h4>Database Health</h4>
+                <p>Healthy</p>
+              </div>
+              <div class="infra-metric-item">
+                <h4>AWS Region</h4>
+                <p>us-east-1</p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ================================================================= -->
+    <!-- STUDENT / MEMBER DASHBOARD VIEW                                   -->
+    <!-- ================================================================= -->
+    <div id="student-view" style="display: none;">
+
+      <!-- Student Section Tabs -->
+      <div class="nav-tabs">
+        <button class="tab-btn active" data-tab="catalog" onclick="switchStudentTab('catalog')">
+          <i class="fas fa-book-search"></i> Search & Browse Catalog
+        </button>
+        <button class="tab-btn" data-tab="my-books" onclick="switchStudentTab('my-books')">
+          <i class="fas fa-book-reader"></i> My Borrowed Books
+        </button>
+        <button class="tab-btn" data-tab="history" onclick="switchStudentTab('history')">
+          <i class="fas fa-history"></i> My Borrowing History
+        </button>
+        <button class="tab-btn" data-tab="my-fines" onclick="switchStudentTab('my-fines')">
+          <i class="fas fa-file-invoice-dollar"></i> My Fines & Payments
+        </button>
+      </div>
+
+      <!-- Student Tab 1: Catalog Search & Request -->
+      <div class="tab-content active" id="student-tab-catalog">
+        <div class="section-toolbar">
+          <div class="search-box" style="max-width: 600px;">
+            <i class="fas fa-search"></i>
+            <input type="text" id="catalog-search-input" class="search-input" placeholder="Search catalog by title, author, category, or ISBN...">
+          </div>
+        </div>
+
+        <div class="book-grid" id="student-catalog-grid">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+      <!-- Student Tab 2: My Borrowed Books -->
+      <div class="tab-content" id="student-tab-my-books">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-book-open text-primary"></i> Currently Borrowed Books</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Issue Date</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="student-borrowed-table-body">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Tab 3: My Borrowing History -->
+      <div class="tab-content" id="student-tab-history">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-history text-secondary"></i> Past Borrowing History</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Book Title</th>
+                  <th>Issued On</th>
+                  <th>Returned On</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="student-history-table-body">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Student Tab 4: My Fines & Payments -->
+      <div class="tab-content" id="student-tab-my-fines">
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-wallet text-accent"></i> Outstanding Fines & Account Status</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Book / Item</th>
+                  <th>Fine Amount</th>
+                  <th>Status</th>
+                  <th>Reason</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="student-fines-table-body">
+                <!-- Rendered via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ================================================================= -->
+  <!-- MODALS                                                            -->
+  <!-- ================================================================= -->
+
+  <!-- Add / Edit Book Modal -->
+  <div class="modal-overlay" id="modal-book">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-book-title">Add New Book</h3>
+        <button class="modal-close" onclick="closeModal('modal-book')">&times;</button>
+      </div>
+      <form id="form-add-book">
+        <div class="modal-body">
+          <input type="hidden" id="book-id-input">
+          
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="book-title">Book Title</label>
+            <input type="text" id="book-title" class="form-control" placeholder="e.g. Clean Code" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="book-author">Author Name</label>
+            <input type="text" id="book-author" class="form-control" placeholder="e.g. Robert C. Martin" required>
+          </div>
+
+          <div class="form-grid" style="margin-bottom: 1rem;">
+            <div class="form-group">
+              <label for="book-isbn">ISBN</label>
+              <input type="text" id="book-isbn" class="form-control" placeholder="e.g. 978-0132350884" required>
+            </div>
+            <div class="form-group">
+              <label for="book-category">Category</label>
+              <select id="book-category" class="form-control" required>
+                <option value="Software Engineering">Software Engineering</option>
+                <option value="DevOps">DevOps</option>
+                <option value="Cloud Computing">Cloud Computing</option>
+                <option value="Database Systems">Database Systems</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Cybersecurity">Cybersecurity</option>
+                <option value="General Fiction">General Fiction</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-grid" style="margin-bottom: 1rem;">
+            <div class="form-group">
+              <label for="book-quantity">Total Copies Quantity</label>
+              <input type="number" id="book-quantity" class="form-control" min="1" value="5" required>
+            </div>
+            <div class="form-group">
+              <label for="book-cover">Cover Image URL (Optional)</label>
+              <input type="url" id="book-cover" class="form-control" placeholder="https://example.com/cover.jpg">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-book')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Book</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Register / Edit Member Modal -->
+  <div class="modal-overlay" id="modal-member">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-member-title">Register New Member</h3>
+        <button class="modal-close" onclick="closeModal('modal-member')">&times;</button>
+      </div>
+      <form id="form-register-member">
+        <div class="modal-body">
+          <input type="hidden" id="member-id-input">
+          
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="member-name">Full Name</label>
+            <input type="text" id="member-name" class="form-control" placeholder="e.g. Jane Smith" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="member-email">Email Address</label>
+            <input type="email" id="member-email" class="form-control" placeholder="e.g. jane.smith@student.edu" required>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 1rem;">
+            <label for="member-phone">Phone Number</label>
+            <input type="text" id="member-phone" class="form-control" placeholder="e.g. +1-555-0199">
+          </div>
+
+          <div class="form-grid" style="margin-bottom: 1rem;">
+            <div class="form-group">
+              <label for="member-role">Role</label>
+              <select id="member-role" class="form-control" required>
+                <option value="STUDENT">STUDENT</option>
+                <option value="LIBRARIAN">LIBRARIAN</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="member-status">Account Status</label>
+              <select id="member-status" class="form-control" required>
+                <option value="ACTIVE">ACTIVE</option>
+                <option value="INACTIVE">INACTIVE</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="closeModal('modal-member')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <!-- Application Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

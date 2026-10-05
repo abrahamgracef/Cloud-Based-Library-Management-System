@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto21
+    commands:
+      - echo "Setting up environment and verifying Java/Maven..."
+      - java -version
+      - mvn -version
+  pre_build:
+    commands:
+      - echo "Running pre-build checks..."
+      - echo "Cleaning target directory..."
+      - mvn clean
+  build:
+    commands:
+      - echo "Compiling application and running unit & integration tests..."
+      - mvn test
+      - echo "Packaging application JAR artifact..."
+      - mvn package -DskipTests
+  post_build:
+    commands:
+      - echo "Build completed successfully on $(date)"
+      - echo "Preparing CodeDeploy output bundle..."
+
+artifacts:
+  files:
+    - target/library-management-system-1.0.0-SNAPSHOT.jar
+    - appspec.yml
+    - scripts/**/*
+  discard-paths: no
+
+cache:
+  paths:
+    - '/root/.m2/**/*'
