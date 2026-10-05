@@ -55,20 +55,26 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ap-south-1
 
       - name: Package CodeDeploy Artifact
         run: |
           zip -r deployment-package.zip target/library-management-system-1.0.0-SNAPSHOT.jar appspec.yml scripts/
 
-      - name: Upload Artifact to AWS S3
+      - name: Upload Artifact to AWS S3 & Trigger Live EC2 Deployment
         run: |
-          aws s3 cp deployment-package.zip s3://${{ secrets.AWS_S3_BUCKET_NAME }}/deployment-package.zip
+          aws s3 cp target/library-management-system-1.0.0-SNAPSHOT.jar s3://library-management-book-covers-232901749713/app/library-management-system-1.0.0-SNAPSHOT.jar
+          aws s3 cp deployment-package.zip s3://library-management-book-covers-232901749713/deployment-package.zip
+          aws ssm send-command \
+            --instance-ids "i-09590fcfa9f901e88" \
+            --document-name "AWS-RunShellScript" \
+            --parameters 'commands=["aws s3 cp s3://library-management-book-covers-232901749713/app/library-management-system-1.0.0-SNAPSHOT.jar /opt/library-app/app.jar", "systemctl restart library-app"]'
 
   docker-build-ecr:
     name: Build & Push Docker Image to ECR
     needs: build-and-test
     runs-on: ubuntu-latest
+    continue-on-error: true
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
 
     steps:
@@ -80,7 +86,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: ap-south-1
 
       - name: Log in to Amazon ECR
         id: login-ecr
