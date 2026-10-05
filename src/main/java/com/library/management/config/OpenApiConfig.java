@@ -17,7 +17,7 @@ public class OpenApiConfig {
                         .title("Cloud-Based Library Management System")
                         .version("1.0")
                         .description("Cloud-Based Library Management System featuring DevOps AWS Integration. " +
-                                "Author: Abraham Grace F (24MIS0211), Course: ISWE406L.")
+                                "Author: Abraham Grace F, Course: ISWE406L.")
                         .contact(new Contact()
                                 .name("Abraham Grace F")
                                 .email("abraham.grace2024@vitstudent.ac.in"))

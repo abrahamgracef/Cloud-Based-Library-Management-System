@@ -48,7 +48,7 @@ public class SnsNotificationService {
     public void sendDeploymentStatusUpdate(String statusDetails) {
         String subject = "Deployment Status Update - Library Management System";
         String message = String.format("Library Management System Deployment Update:\n\n%s\n\n" +
-                "Environment: AWS Cloud Services\nAuthor: Abraham Grace F (24MIS0211)", statusDetails);
+                "Environment: AWS Cloud Services\nAuthor: Abraham Grace F", statusDetails);
 
         publishNotification(subject, message);
     }

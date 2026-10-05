@@ -1,7 +1,6 @@
 # Review 1 Viva & Presentation Guide
 ## Cloud-Based Library Management System Using DevOps and AWS
 - **Student Name**: Abraham Grace F
-- **Register Number**: 24MIS0211
 - **Course Code**: ISWE406L
 - **Live AWS URL**: [http://52.66.211.1:8085](http://52.66.211.1:8085)
 - **GitHub Repository**: [https://github.com/abrahamgracef/Cloud-Based-Library-Management-System](https://github.com/abrahamgracef/Cloud-Based-Library-Management-System)
