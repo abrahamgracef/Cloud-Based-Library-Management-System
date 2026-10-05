@@ -174,7 +174,7 @@ Resources:
     Type: AWS::RDS::DBInstance
     Properties:
       Engine: postgres
-      EngineVersion: '15.4'
+      EngineVersion: '15.14'
       DBInstanceClass: db.t3.micro
       AllocatedStorage: 20
       DBName: librarydb
@@ -247,7 +247,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: t3.micro
-      ImageId: ami-0c101f26f147fa7fd # Amazon Linux 2023 AMI (us-east-1)
+      ImageId: ami-08e3b3155fc937a94 # Amazon Linux 2023 AMI (ap-south-1 Mumbai)
       SubnetId: !Ref PublicSubnet
       SecurityGroupIds:
         - !Ref EC2SecurityGroup
