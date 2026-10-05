@@ -439,26 +439,71 @@
                   <div class="node-icon-box" style="color: #f59e0b;"><i class="fas fa-chart-line"></i></div>
                   <div class="node-status-led"></div>
                 </div>
-                <div class="node-title">8. CloudWatch</div>
-                <div class="node-desc">Real-time metrics, system performance logs & alarms.</div>
-                <div class="node-meta">Logs: <code id="devops-cloudwatch-log" style="font-size:0.75rem;">/aws/library-management</code></div>
+                <div class="node-title">8. Amazon CloudWatch</div>
+                <div class="node-desc">Monitors EC2 CPU, memory, network & aggregates application logs.</div>
+                <div class="node-meta">Logs: <code id="devops-cloudwatch-log" style="font-size:0.75rem;">/aws/library-management</code> &bull; <span style="color:#10b981;">Active</span></div>
               </div>
 
-              <!-- 9. AWS SNS -->
+              <!-- 9. AWS CloudTrail -->
               <div class="node-card">
                 <div class="node-header">
-                  <div class="node-icon-box" style="color: #ef4444;"><i class="fas fa-paper-plane"></i></div>
+                  <div class="node-icon-box" style="color: #6366f1;"><i class="fas fa-shoe-prints"></i></div>
                   <div class="node-status-led"></div>
                 </div>
-                <div class="node-title">9. AWS SNS</div>
-                <div class="node-desc">Notification service for email/SMS overdue alerts.</div>
+                <div class="node-title">9. AWS CloudTrail</div>
+                <div class="node-desc">Audits and records all AWS API activities and account actions.</div>
+                <div class="node-meta">Purpose: <code>Security & Auditing</code> &bull; <span style="color:#10b981;">Enabled</span></div>
+              </div>
+
+              <!-- 10. AWS SNS -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #ef4444;"><i class="fas fa-bell"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">10. Amazon SNS</div>
+                <div class="node-desc">Notification service for email/SMS overdue alerts and CI/CD status.</div>
                 <div class="node-meta">Topic: <code id="devops-sns-topic" style="font-size:0.75rem;">library-notifications</code></div>
+              </div>
+
+              <!-- 11. AWS IAM -->
+              <div class="node-card">
+                <div class="node-header">
+                  <div class="node-icon-box" style="color: #14b8a6;"><i class="fas fa-user-shield"></i></div>
+                  <div class="node-status-led"></div>
+                </div>
+                <div class="node-title">11. AWS IAM</div>
+                <div class="node-desc">Enforces least-privilege access, roles & instance profiles for EC2.</div>
+                <div class="node-meta">Policy: <code>Role-Based Access</code> &bull; <span style="color:#10b981;">Secured</span></div>
               </div>
 
             </div>
 
+            <!-- Review / Viva Quick Reference Box -->
+            <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-top: 25px; color: #f8fafc;">
+              <h4 style="color: #38bdf8; margin-bottom: 12px; font-size: 1.1rem;"><i class="fas fa-graduation-cap"></i> Review 1 Viva & Presentation Cheatsheet</h4>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; font-size: 0.9rem;">
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                  <strong style="color: #facc15;">Core CI/CD Workflow:</strong>
+                  <p style="margin-top: 5px; color: #cbd5e1; line-height: 1.4;">Developer &rarr; GitHub (Source) &rarr; CodePipeline (Orchestrator) &rarr; CodeBuild (Build & Test) &rarr; CodeDeploy (Deploy) &rarr; EC2 (App Server) &rarr; RDS PostgreSQL (Data) + S3 (Covers).</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                  <strong style="color: #34d399;">Why This Workflow?</strong>
+                  <p style="margin-top: 5px; color: #cbd5e1; line-height: 1.4;">Automates software delivery. Code push automatically triggers unit tests and zero-downtime deployment to EC2, eliminating human error and manual server configuration.</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                  <strong style="color: #a78bfa;">CloudWatch vs CloudTrail:</strong>
+                  <p style="margin-top: 5px; color: #cbd5e1; line-height: 1.4;"><strong>CloudWatch:</strong> <em>"What is happening?"</em> (CPU, RAM, logs).<br><strong>CloudTrail:</strong> <em>"Who did what?"</em> (API audit history & security governance).</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px;">
+                  <strong style="color: #f472b6;">S3 vs RDS Separation:</strong>
+                  <p style="margin-top: 5px; color: #cbd5e1; line-height: 1.4;"><strong>Amazon RDS:</strong> Structured relational records (books, members, fines).<br><strong>Amazon S3:</strong> Scalable object storage for heavy binary files (book covers).</p>
+                </div>
+              </div>
+            </div>
+
             <!-- Infrastructure Performance Panel -->
-            <div class="infra-metrics-grid">
+            <div class="infra-metrics-grid" style="margin-top: 20px;">
               <div class="infra-metric-item">
                 <h4>System Uptime</h4>
                 <p id="devops-metric-uptime">Loading...</p>
