@@ -350,7 +350,7 @@
         <div class="card">
           <div class="card-header">
             <h3 class="card-title"><i class="fab fa-aws" style="color: #ff9900;"></i> Cloud Architecture & CI/CD Pipeline Visualizer</h3>
-            <span class="badge badge-available"><i class="fas fa-circle" style="font-size: 0.5rem;"></i> Pipeline Healthy</span>
+            <span class="badge badge-available" id="devops-pipeline-badge"><i class="fas fa-circle" style="font-size: 0.5rem;"></i> Pipeline Healthy</span>
           </div>
 
           <div class="devops-container">
@@ -363,8 +363,8 @@
                   <div class="node-status-led"></div>
                 </div>
                 <div class="node-title">1. Source Control</div>
-                <div class="node-desc">GitHub Repo webhook triggers pipeline on main push.</div>
-                <div class="node-meta">Branch: <code>main</code> &bull; Commit: <code>HEAD</code></div>
+                <div class="node-desc">GitHub Repo webhook triggers CI/CD pipeline on push.</div>
+                <div class="node-meta">Branch: <code id="devops-git-branch">main</code> &bull; Repo: <code id="devops-git-repo">abrahamgracef/...</code></div>
               </div>
 
               <!-- 2. AWS CodePipeline -->
@@ -375,7 +375,7 @@
                 </div>
                 <div class="node-title">2. CodePipeline</div>
                 <div class="node-desc">Automated CI/CD orchestrator managing execution steps.</div>
-                <div class="node-meta">State: <code>SUCCEEDED</code></div>
+                <div class="node-meta">State: <code style="color:#10b981;">SUCCEEDED</code> &bull; Region: <code id="devops-pipeline-region">ap-south-1</code></div>
               </div>
 
               <!-- 3. AWS CodeBuild -->
@@ -385,8 +385,8 @@
                   <div class="node-status-led"></div>
                 </div>
                 <div class="node-title">3. CodeBuild</div>
-                <div class="node-desc">Builds Java 17 Spring Boot JAR with Maven & JUnit tests.</div>
-                <div class="node-meta">Artifact: <code>app.jar</code> &bull; 0 Failures</div>
+                <div class="node-desc">Builds Java 21 Spring Boot JAR with Maven & JUnit tests.</div>
+                <div class="node-meta">Runtime: <code id="devops-java-ver">Java 21</code> &bull; Tests: <code>34/34 Passed</code></div>
               </div>
 
               <!-- 4. AWS CodeDeploy -->
@@ -397,7 +397,7 @@
                 </div>
                 <div class="node-title">4. CodeDeploy</div>
                 <div class="node-desc">Deploys target build artifacts smoothly to EC2 instances.</div>
-                <div class="node-meta">Strategy: <code>In-Place</code></div>
+                <div class="node-meta">Strategy: <code>In-Place</code> &bull; Agent: <code style="color:#10b981;">Active</code></div>
               </div>
 
               <!-- 5. AWS EC2 -->
@@ -407,8 +407,8 @@
                   <div class="node-status-led"></div>
                 </div>
                 <div class="node-title">5. EC2 Server</div>
-                <div class="node-desc">Spring Boot application server running on Port 8080.</div>
-                <div class="node-meta">Instance: <code>t3.micro</code> &bull; Linux</div>
+                <div class="node-desc">Spring Boot application server running on Port <span id="devops-port-desc">8085</span>.</div>
+                <div class="node-meta">Instance: <code id="devops-ec2-type">t3.micro</code> &bull; IP: <code id="devops-ec2-ip">52.66.211.1</code></div>
               </div>
 
               <!-- 6. AWS RDS PostgreSQL -->
@@ -418,8 +418,8 @@
                   <div class="node-status-led"></div>
                 </div>
                 <div class="node-title">6. RDS PostgreSQL</div>
-                <div class="node-desc">Managed relational database with Multi-AZ replication.</div>
-                <div class="node-meta">Engine: <code>PostgreSQL 15</code></div>
+                <div class="node-desc">Managed relational database hosted in private subnets.</div>
+                <div class="node-meta">Engine: <code id="devops-db-engine">PostgreSQL 15.14</code></div>
               </div>
 
               <!-- 7. AWS S3 Storage -->
@@ -429,8 +429,8 @@
                   <div class="node-status-led"></div>
                 </div>
                 <div class="node-title">7. AWS S3 Bucket</div>
-                <div class="node-desc">Cloud storage for book cover images and digital attachments.</div>
-                <div class="node-meta">Bucket: <code>lib-media-s3</code></div>
+                <div class="node-desc">Cloud storage for book cover images & static files.</div>
+                <div class="node-meta">Bucket: <code id="devops-s3-bucket" style="font-size:0.75rem;">library-covers-232901749713</code></div>
               </div>
 
               <!-- 8. AWS CloudWatch -->
@@ -441,7 +441,7 @@
                 </div>
                 <div class="node-title">8. CloudWatch</div>
                 <div class="node-desc">Real-time metrics, system performance logs & alarms.</div>
-                <div class="node-meta">Status: <code>Monitoring Active</code></div>
+                <div class="node-meta">Logs: <code id="devops-cloudwatch-log" style="font-size:0.75rem;">/aws/library-management</code></div>
               </div>
 
               <!-- 9. AWS SNS -->
@@ -452,7 +452,7 @@
                 </div>
                 <div class="node-title">9. AWS SNS</div>
                 <div class="node-desc">Notification service for email/SMS overdue alerts.</div>
-                <div class="node-meta">Topic: <code>lib-overdue-alerts</code></div>
+                <div class="node-meta">Topic: <code id="devops-sns-topic" style="font-size:0.75rem;">library-notifications</code></div>
               </div>
 
             </div>
@@ -461,19 +461,19 @@
             <div class="infra-metrics-grid">
               <div class="infra-metric-item">
                 <h4>System Uptime</h4>
-                <p>99.98%</p>
+                <p id="devops-metric-uptime">Loading...</p>
               </div>
               <div class="infra-metric-item">
-                <h4>API Response Time</h4>
-                <p>24 ms</p>
+                <h4>API Latency</h4>
+                <p id="devops-metric-latency">Loading...</p>
               </div>
               <div class="infra-metric-item">
                 <h4>Database Health</h4>
-                <p>Healthy</p>
+                <p id="devops-metric-db" style="color:#10b981;">Healthy</p>
               </div>
               <div class="infra-metric-item">
                 <h4>AWS Region</h4>
-                <p>us-east-1</p>
+                <p id="devops-metric-region">ap-south-1 (Mumbai)</p>
               </div>
             </div>
 

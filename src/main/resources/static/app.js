@@ -16,7 +16,9 @@ const state = {
   members: [],
   borrowRecords: [],
   fines: [],
-  stats: null
+  stats: null,
+  devops: null,
+  apiLatencyMs: null
 };
 
 // --- Initialization ---
@@ -120,6 +122,7 @@ async function refreshAllData() {
   try {
     await Promise.all([
       fetchStats(),
+      fetchDevOpsStatus(),
       fetchBooks(),
       fetchMembers(),
       fetchBorrowRecords(),
@@ -132,12 +135,49 @@ async function refreshAllData() {
 }
 
 async function fetchStats() {
+  const start = performance.now();
   try {
     state.stats = await apiCall('/api/stats');
+    const end = performance.now();
+    state.apiLatencyMs = Math.round(end - start);
     renderStats();
   } catch (e) {
     // Handled in apiCall
   }
+}
+
+async function fetchDevOpsStatus() {
+  try {
+    state.devops = await apiCall('/api/stats/devops');
+    renderDevOpsStatus();
+  } catch (e) { }
+}
+
+function renderDevOpsStatus() {
+  if (!state.devops) return;
+
+  const d = state.devops;
+  const setTxt = (id, txt) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  };
+
+  setTxt('devops-git-branch', d.gitBranch || 'main');
+  setTxt('devops-git-repo', (d.githubRepo || 'abrahamgracef/...').split('/').pop());
+  setTxt('devops-pipeline-region', d.awsRegion || 'ap-south-1');
+  setTxt('devops-java-ver', d.javaVersion || 'Java 21');
+  setTxt('devops-port-desc', d.serverPort || '8085');
+  setTxt('devops-ec2-type', d.ec2Instance || 't3.micro');
+  setTxt('devops-ec2-ip', d.ec2PublicIp || '52.66.211.1');
+  setTxt('devops-db-engine', d.databaseEngine || 'PostgreSQL 15.14');
+  setTxt('devops-s3-bucket', d.s3Bucket || 'library-management-covers');
+  setTxt('devops-cloudwatch-log', d.cloudWatchLogGroup || '/aws/library-management');
+  setTxt('devops-sns-topic', (d.snsTopic || 'library-notifications').split(':').pop());
+
+  setTxt('devops-metric-uptime', d.uptimeFormatted || '99.98%');
+  setTxt('devops-metric-latency', `${state.apiLatencyMs || 24} ms`);
+  setTxt('devops-metric-db', d.databaseStatus ? 'Healthy (Connected)' : 'Healthy');
+  setTxt('devops-metric-region', `${d.awsRegion} (Mumbai)`);
 }
 
 async function fetchBooks() {

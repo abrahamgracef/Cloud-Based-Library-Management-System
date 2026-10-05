@@ -26,4 +26,10 @@ public class StatsController {
         StatsSummaryDto stats = statsService.getStatsSummary();
         return ResponseEntity.ok(stats);
     }
+
+    @GetMapping("/devops")
+    public ResponseEntity<com.library.management.dto.DevOpsStatusDto> getDevOpsStatus() {
+        com.library.management.dto.DevOpsStatusDto devops = statsService.getDevOpsStatus();
+        return ResponseEntity.ok(devops);
+    }
 }
