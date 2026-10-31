@@ -171,7 +171,6 @@ class BorrowingServiceTest {
     @Test
     @DisplayName("getMemberBorrowHistory - Success")
     void getMemberBorrowHistory_Success() {
-        when(memberRepository.existsById(1L)).thenReturn(true);
         when(borrowRecordRepository.findByMemberId(1L)).thenReturn(Arrays.asList(sampleBorrowRecord));
 
         List<BorrowRecordDto> history = borrowingService.getMemberBorrowHistory(1L);
@@ -184,7 +183,7 @@ class BorrowingServiceTest {
     @Test
     @DisplayName("getOverdueBorrows - Success")
     void getOverdueBorrows_Success() {
-        when(borrowRecordRepository.findOverdueRecords(any(LocalDate.class))).thenReturn(Arrays.asList(sampleBorrowRecord));
+        when(borrowRecordRepository.findByStatusAndDueDateBefore(eq(BorrowStatus.ISSUED), any(LocalDate.class))).thenReturn(Arrays.asList(sampleBorrowRecord));
 
         List<BorrowRecordDto> overdue = borrowingService.getOverdueBorrows();
 

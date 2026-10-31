@@ -35,6 +35,9 @@ class BookControllerTest {
     @MockBean
     private BookService bookService;
 
+    @MockBean
+    private com.library.management.service.S3StorageService s3StorageService;
+
     private BookDto sampleBookDto;
 
     @BeforeEach
@@ -153,7 +156,8 @@ class BookControllerTest {
 
         mockMvc.perform(delete("/api/books/1")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.message", containsString("successfully deleted")));
 
         verify(bookService, times(1)).deleteBook(1L);
     }
