@@ -15,8 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/books")
+@RequestMapping("/apis/books")
 @CrossOrigin(origins = "*")
+
+
 public class BookController {
 
     private final BookService bookService;
