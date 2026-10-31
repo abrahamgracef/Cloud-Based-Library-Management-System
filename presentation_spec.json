@@ -1,0 +1,77 @@
+{
+  "title": "LibraCore - Cloud-Based Library Management System",
+  "subtitle": "Cloud Infrastructure, DevOps & Architecture Presentation",
+  "slide_size": "16:9",
+  "slides": [
+    {
+      "layout": "title",
+      "title": "LibraCore: Cloud Library Management System",
+      "subtitle": "Full-Stack SaaS Architecture, AWS DevOps & CI/CD Pipeline\nVIT ISWE406L Lab Project"
+    },
+    {
+      "layout": "title_content",
+      "title": "Project Overview & Key Features",
+      "bullets": [
+        "Modern SaaS Library Management System built for high concurrency and reliability",
+        "Backend: Java 21, Spring Boot 3.2.3, Spring Data JPA, Hibernate, PostgreSQL 15",
+        "Frontend: Responsive SPA with HTML5, CSS3, Chart.js analytics dashboard",
+        "Core Modules: Book Catalog Management, Member Directory, Borrowing & Returns, Automated Fines",
+        "API & Docs: RESTful endpoints with built-in OpenAPI 3.0 / Swagger UI (/swagger-ui.html)"
+      ]
+    },
+    {
+      "layout": "title_content",
+      "title": "System Architecture",
+      "bullets": [
+        "Three-Tier Web Architecture:",
+        "  - Presentation Layer: Single Page Application (HTML/JS/Chart.js) hosted on EC2",
+        "  - Business Logic Layer: Spring Boot REST Controllers, Service beans, Validation & JPA Repositories",
+        "  - Persistence Layer: AWS RDS PostgreSQL 15 (Managed DB instance with 20GB gp2 storage)",
+        "Cloud Integrations:",
+        "  - AWS S3: Secure cloud storage for high-resolution book cover images",
+        "  - AWS SNS: Automated library notifications and event dispatching"
+      ]
+    },
+    {
+      "layout": "title_content",
+      "title": "AWS Cloud Infrastructure & Deployment",
+      "bullets": [
+        "Infrastructure Region: AWS Mumbai (ap-south-1)",
+        "Compute: Amazon EC2 t3.micro instance (Production-AppServer, running Spring Boot on port 8085)",
+        "Database: Amazon RDS PostgreSQL (db.t3.micro, private subnet with secure security group rules)",
+        "Infrastructure as Code: AWS CloudFormation stack (LibraryManagementSystemStack)",
+        "Monitoring & Security: CloudWatch application logs, CloudTrail audit trails, least-privilege IAM roles"
+      ]
+    },
+    {
+      "layout": "title_content",
+      "title": "Automated DevOps CI/CD Pipeline",
+      "bullets": [
+        "Version Control: GitHub Repository (Cloud-Based-Library-Management-System)",
+        "CI Runner: GitHub Actions workflow triggered on push/PR to main branch",
+        "Pipeline Stages:",
+        "  1. Build & Test: Maven clean test (executing 34/34 passing unit & integration test suites)",
+        "  2. Artifact Packaging: Generates library-management-system-1.0.0-SNAPSHOT.jar",
+        "  3. S3 Upload & Deployment: Pushes JAR to S3 bucket and triggers EC2 service restart via AWS SSM",
+        "  4. Containerization: Builds and pushes Docker images to Amazon ECR"
+      ]
+    },
+    {
+      "layout": "title_content",
+      "title": "Live Telemetry & Management",
+      "bullets": [
+        "Live Web Dashboard: http://13.207.41.45:8085",
+        "API Documentation: http://13.207.41.45:8085/swagger-ui.html",
+        "Python Automation Scripts in Repo:",
+        "  - start_aws_cloud.py / stop_aws_cloud.py: Infrastructure lifecycle control",
+        "  - check_status.py / deploy_app.py: Remote health check and zero-downtime deployment",
+        "  - seed_live_aws.py: Populates catalog with 22 real books and cover images"
+      ]
+    },
+    {
+      "layout": "title",
+      "title": "Conclusion & Future Scope",
+      "subtitle": "Successfully deployed, fully tested, and production-ready cloud application.\nThank you! Q&A"
+    }
+  ]
+}

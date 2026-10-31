@@ -9,6 +9,8 @@ import com.library.management.repository.BookRepository;
 import com.library.management.repository.BorrowRecordRepository;
 import com.library.management.repository.FineRepository;
 import com.library.management.repository.MemberRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @Transactional
 public class BorrowingServiceImpl implements BorrowingService {
 
+    private static final Logger log = LoggerFactory.getLogger(BorrowingServiceImpl.class);
     private static final int DEFAULT_BORROW_DAYS = 14;
     private static final BigDecimal DAILY_FINE_RATE = BigDecimal.valueOf(1.00); // $1 per day
 
@@ -48,6 +51,7 @@ public class BorrowingServiceImpl implements BorrowingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Member not found with id: " + request.getMemberId()));
 
         if (member.getStatus() != MemberStatus.ACTIVE) {
+            log.warn("Failed borrow attempt: Member {} (ID: {}) is inactive.", member.getName(), member.getId());
             throw new BadRequestException("Member is inactive and cannot borrow books.");
         }
 
@@ -55,6 +59,7 @@ public class BorrowingServiceImpl implements BorrowingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Book not found with id: " + request.getBookId()));
 
         if (book.getAvailableQuantity() <= 0) {
+            log.warn("Failed borrow attempt: Book '{}' (ID: {}) is out of stock.", book.getTitle(), book.getId());
             throw new BadRequestException("Book '" + book.getTitle() + "' is currently out of stock.");
         }
 
@@ -79,6 +84,16 @@ public class BorrowingServiceImpl implements BorrowingService {
                 .build();
 
         BorrowRecord savedRecord = borrowRecordRepository.save(record);
+
+        log.info("==================================================");
+        log.info("📚 AUDIT LOG: BOOK ISSUED SUCCESSFULLY");
+        log.info(" - Transaction ID : #{}", savedRecord.getId());
+        log.info(" - Book Title     : \"{}\"", book.getTitle());
+        log.info(" - Borrowed By    : {} (Member ID: {})", member.getName(), member.getId());
+        log.info(" - Issue Date     : {}", issueDate);
+        log.info(" - Due Date       : {}", dueDate);
+        log.info("==================================================");
+
         return mapToDto(savedRecord);
     }
 
@@ -94,10 +109,11 @@ public class BorrowingServiceImpl implements BorrowingService {
         LocalDate returnDate = LocalDate.now();
         record.setReturnDate(returnDate);
 
+        BigDecimal fineAmount = BigDecimal.ZERO;
         // Auto-calculate overdue fine if returnDate > dueDate ($1/day)
         if (returnDate.isAfter(record.getDueDate())) {
             long overdueDays = ChronoUnit.DAYS.between(record.getDueDate(), returnDate);
-            BigDecimal fineAmount = DAILY_FINE_RATE.multiply(BigDecimal.valueOf(overdueDays));
+            fineAmount = DAILY_FINE_RATE.multiply(BigDecimal.valueOf(overdueDays));
             record.setFineAmount(fineAmount);
 
             // Create fine entry if fine amount > 0
@@ -110,6 +126,7 @@ public class BorrowingServiceImpl implements BorrowingService {
                         .reason("Overdue return: " + overdueDays + " day(s) late ($1/day)")
                         .build();
                 fineRepository.save(fine);
+                log.warn("⚠️ OVERDUE FINE ASSESSED: ${} for {} (Record #{})", fineAmount, record.getMember().getName(), record.getId());
             }
         }
 
@@ -121,15 +138,22 @@ public class BorrowingServiceImpl implements BorrowingService {
         bookRepository.save(book);
 
         BorrowRecord savedRecord = borrowRecordRepository.save(record);
+
+        log.info("==================================================");
+        log.info("🔄 AUDIT LOG: BOOK RETURNED SUCCESSFULLY");
+        log.info(" - Transaction ID : #{}", savedRecord.getId());
+        log.info(" - Book Title     : \"{}\"", book.getTitle());
+        log.info(" - Returned By    : {} (Member ID: {})", record.getMember().getName(), record.getMember().getId());
+        log.info(" - Return Date    : {}", returnDate);
+        log.info(" - Assessed Fine  : ${}", fineAmount);
+        log.info("==================================================");
+
         return mapToDto(savedRecord);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<BorrowRecordDto> getMemberBorrowHistory(Long memberId) {
-        if (!memberRepository.existsById(memberId)) {
-            throw new ResourceNotFoundException("Member not found with id: " + memberId);
-        }
         return borrowRecordRepository.findByMemberId(memberId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
@@ -146,8 +170,7 @@ public class BorrowingServiceImpl implements BorrowingService {
     @Override
     @Transactional(readOnly = true)
     public List<BorrowRecordDto> getOverdueBorrows() {
-        LocalDate today = LocalDate.now();
-        return borrowRecordRepository.findOverdueRecords(today).stream()
+        return borrowRecordRepository.findByStatusAndDueDateBefore(BorrowStatus.ISSUED, LocalDate.now()).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -163,12 +186,10 @@ public class BorrowingServiceImpl implements BorrowingService {
     private BorrowRecordDto mapToDto(BorrowRecord record) {
         return BorrowRecordDto.builder()
                 .id(record.getId())
-                .memberId(record.getMember().getId())
-                .memberCode(record.getMember().getMemberCode())
-                .memberName(record.getMember().getName())
                 .bookId(record.getBook().getId())
                 .bookTitle(record.getBook().getTitle())
-                .bookIsbn(record.getBook().getIsbn())
+                .memberId(record.getMember().getId())
+                .memberName(record.getMember().getName())
                 .issueDate(record.getIssueDate())
                 .dueDate(record.getDueDate())
                 .returnDate(record.getReturnDate())
